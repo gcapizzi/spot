@@ -20,5 +20,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("You are logged in as:", userId)
+	fmt.Println("Logged in as ", userId)
 }
