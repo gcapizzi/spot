@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -21,4 +22,13 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Logged in as ", userId)
+
+	tracklistScanner := bufio.NewScanner(os.Stdin)
+	for tracklistScanner.Scan() {
+		trackQuery := tracklistScanner.Text()
+		track, err := client.FindTrack(trackQuery)
+		if err == nil {
+			fmt.Println(track)
+		}
+	}
 }

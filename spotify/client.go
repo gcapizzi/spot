@@ -2,6 +2,7 @@ package spotify
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 	"math/big"
 	"net/http"
@@ -11,10 +12,17 @@ import (
 
 type Client interface {
 	CurrentUserId() (string, error)
+	FindTrack(string) (Track, error)
 }
 
 type Zmb3Client struct {
 	spotifyClient *spotify.Client
+}
+
+type Track struct {
+	Title   string
+	Artists []string
+	Album   string
 }
 
 func (client Zmb3Client) CurrentUserId() (string, error) {
@@ -64,4 +72,17 @@ func generateRandomState() (string, error) {
 	randomInt, err := rand.Int(rand.Reader, big.NewInt(1000000000))
 	state := randomInt.String()
 	return state, err
+}
+
+func (client Zmb3Client) FindTrack(query string) (Track, error) {
+	results, err := client.spotifyClient.Search(query, spotify.SearchTypeTrack)
+	if err != nil {
+		return Track{}, err
+	}
+	if len(results.Tracks.Tracks) == 0 {
+		return Track{}, fmt.Errorf("No track found for query %s", query)
+	}
+
+	firstResult := results.Tracks.Tracks[0]
+	return Track{Title: firstResult.Name, Artists: []string{firstResult.Artists[0].Name}, Album: firstResult.Album.Name}, nil
 }
