@@ -33,8 +33,9 @@ func Authenticate(clientId, clientSecret string) (string, chan Client) {
 	auth.SetAuthInfo(clientId, clientSecret)
 
 	clientChannel := make(chan Client)
+	closeChannel := make(chan bool)
 
-	http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+	server := http.Server{Addr: ":8080", Handler: http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		token, err := auth.Token(state, request)
 		if err != nil {
 			http.Error(response, "Authentication failed", http.StatusForbidden)
@@ -44,8 +45,15 @@ func Authenticate(clientId, clientSecret string) (string, chan Client) {
 		spotifyClient := auth.NewClient(token)
 		client := Zmb3Client{spotifyClient: &spotifyClient}
 		clientChannel <- client
-	})
-	go http.ListenAndServe(":8080", nil)
+		closeChannel <- true
+	})}
+
+	go server.ListenAndServe()
+
+	go func() {
+		<-closeChannel
+		server.Close()
+	}()
 
 	authUrl := auth.AuthURL(state)
 
