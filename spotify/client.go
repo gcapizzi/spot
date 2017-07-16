@@ -13,6 +13,8 @@ import (
 type Client interface {
 	CurrentUserId() (string, error)
 	FindTrack(string) (Track, error)
+	CreatePlaylist(string) (Playlist, error)
+	AddTrackToPlaylist(Playlist, Track) error
 }
 
 type Zmb3Client struct {
@@ -20,9 +22,10 @@ type Zmb3Client struct {
 }
 
 type Track struct {
-	Title   string
-	Artists []string
-	Album   string
+	Title     string
+	Artists   []string
+	Album     string
+	spotifyId string
 }
 
 func (client Zmb3Client) CurrentUserId() (string, error) {
@@ -37,7 +40,11 @@ func (client Zmb3Client) CurrentUserId() (string, error) {
 func Authenticate(clientId, clientSecret string) (string, chan Client) {
 	state, _ := generateRandomState()
 
-	auth := spotify.NewAuthenticator("http://localhost:8080", spotify.ScopeUserReadPrivate)
+	auth := spotify.NewAuthenticator(
+		"http://localhost:8080",
+		spotify.ScopeUserReadPrivate,
+		spotify.ScopePlaylistModifyPrivate,
+	)
 	auth.SetAuthInfo(clientId, clientSecret)
 
 	clientChannel := make(chan Client)
@@ -84,5 +91,36 @@ func (client Zmb3Client) FindTrack(query string) (Track, error) {
 	}
 
 	firstResult := results.Tracks.Tracks[0]
-	return Track{Title: firstResult.Name, Artists: []string{firstResult.Artists[0].Name}, Album: firstResult.Album.Name}, nil
+	track := Track{
+		Title:     firstResult.Name,
+		Artists:   []string{firstResult.Artists[0].Name},
+		Album:     firstResult.Album.Name,
+		spotifyId: string(firstResult.ID),
+	}
+	return track, nil
+}
+
+type Playlist struct {
+	Name      string
+	spotifyId string
+}
+
+func (client Zmb3Client) CreatePlaylist(name string) (Playlist, error) {
+	userId, _ := client.CurrentUserId()
+	spotifyPlaylist, err := client.spotifyClient.CreatePlaylistForUser(userId, name, false)
+	if err != nil {
+		return Playlist{}, err
+	}
+	return Playlist{Name: name, spotifyId: string(spotifyPlaylist.ID)}, nil
+}
+
+func (client Zmb3Client) AddTrackToPlaylist(playlist Playlist, track Track) error {
+	userId, _ := client.CurrentUserId()
+	_, err := client.spotifyClient.AddTracksToPlaylist(
+		userId,
+		spotify.ID(playlist.spotifyId),
+		spotify.ID(track.spotifyId),
+	)
+
+	return err
 }

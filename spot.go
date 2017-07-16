@@ -23,12 +23,13 @@ func main() {
 	}
 	fmt.Println("Logged in as ", userId)
 
+	playlist, _ := client.CreatePlaylist("spot")
 	tracklistScanner := bufio.NewScanner(os.Stdin)
 	for tracklistScanner.Scan() {
 		trackQuery := tracklistScanner.Text()
 		track, err := client.FindTrack(trackQuery)
 		if err == nil {
-			fmt.Println(track)
+			client.AddTrackToPlaylist(playlist, track)
 		}
 	}
 }
