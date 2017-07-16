@@ -13,7 +13,10 @@ func main() {
 	clientId := os.Getenv("SPOT_CLIENT_ID")
 	clientSecret := os.Getenv("SPOT_CLIENT_SECRET")
 
-	authUrl, clientChannel := spotify.Authenticate(clientId, clientSecret)
+	authUrl, clientChannel, err := spotify.Authenticate(clientId, clientSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", authUrl)
 	client := <-clientChannel
 
@@ -23,7 +26,11 @@ func main() {
 	}
 	fmt.Println("Logged in as ", userId)
 
-	playlist, _ := client.CreatePlaylist("spot")
+	playlist, err := client.CreatePlaylist("spot")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	tracklistScanner := bufio.NewScanner(os.Stdin)
 	for tracklistScanner.Scan() {
 		trackQuery := tracklistScanner.Text()

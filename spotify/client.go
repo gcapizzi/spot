@@ -37,8 +37,11 @@ func (client Zmb3Client) CurrentUserId() (string, error) {
 	return currentUser.ID, nil
 }
 
-func Authenticate(clientId, clientSecret string) (string, chan Client) {
-	state, _ := generateRandomState()
+func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
+	state, err := generateRandomState()
+	if err != nil {
+		return "", nil, err
+	}
 
 	auth := spotify.NewAuthenticator(
 		"http://localhost:8080",
@@ -72,7 +75,7 @@ func Authenticate(clientId, clientSecret string) (string, chan Client) {
 
 	authUrl := auth.AuthURL(state)
 
-	return authUrl, clientChannel
+	return authUrl, clientChannel, nil
 }
 
 func generateRandomState() (string, error) {
@@ -106,17 +109,26 @@ type Playlist struct {
 }
 
 func (client Zmb3Client) CreatePlaylist(name string) (Playlist, error) {
-	userId, _ := client.CurrentUserId()
+	userId, err := client.CurrentUserId()
+	if err != nil {
+		return Playlist{}, err
+	}
+
 	spotifyPlaylist, err := client.spotifyClient.CreatePlaylistForUser(userId, name, false)
 	if err != nil {
 		return Playlist{}, err
 	}
+
 	return Playlist{Name: name, spotifyId: string(spotifyPlaylist.ID)}, nil
 }
 
 func (client Zmb3Client) AddTrackToPlaylist(playlist Playlist, track Track) error {
-	userId, _ := client.CurrentUserId()
-	_, err := client.spotifyClient.AddTracksToPlaylist(
+	userId, err := client.CurrentUserId()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.spotifyClient.AddTracksToPlaylist(
 		userId,
 		spotify.ID(playlist.spotifyId),
 		spotify.ID(track.spotifyId),
