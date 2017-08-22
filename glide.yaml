@@ -1,3 +1,0 @@
-package: github.com/gcapizzi/spot
-import:
-- package: github.com/zmb3/spotify
