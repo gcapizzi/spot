@@ -10,14 +10,14 @@ import (
 )
 
 func main() {
-	clientId := os.Getenv("SPOT_CLIENT_ID")
+	clientID := os.Getenv("SPOT_CLIENT_ID")
 	clientSecret := os.Getenv("SPOT_CLIENT_SECRET")
 
-	authUrl, clientChannel, err := spotify.Authenticate(clientId, clientSecret)
+	authURL, clientChannel, err := spotify.Authenticate(clientID, clientSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", authUrl)
+	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", authURL)
 
 	client := <-clientChannel
 

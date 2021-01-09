@@ -15,7 +15,7 @@ type Client struct {
 	spotifyClient *spotify.Client
 }
 
-func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
+func Authenticate(clientID, clientSecret string) (string, chan Client, error) {
 	state, err := generateRandomState()
 	if err != nil {
 		return "", nil, err
@@ -26,7 +26,7 @@ func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
 		spotify.ScopeUserReadPrivate,
 		spotify.ScopePlaylistModifyPrivate,
 	)
-	auth.SetAuthInfo(clientId, clientSecret)
+	auth.SetAuthInfo(clientID, clientSecret)
 
 	clientChannel := make(chan Client)
 	closeChannel := make(chan bool)
@@ -51,9 +51,9 @@ func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
 		server.Close()
 	}()
 
-	authUrl := auth.AuthURL(state)
+	authURL := auth.AuthURL(state)
 
-	return authUrl, clientChannel, nil
+	return authURL, clientChannel, nil
 }
 
 func generateRandomState() (string, error) {
@@ -68,7 +68,7 @@ func (c Client) FindTrack(query string) (playlist.Track, error) {
 		return playlist.Track{}, err
 	}
 	if len(results.Tracks.Tracks) == 0 {
-		return playlist.Track{}, fmt.Errorf("No track found for query %s", query)
+		return playlist.Track{}, fmt.Errorf("no track found for query %s", query)
 	}
 
 	firstResult := results.Tracks.Tracks[0]
