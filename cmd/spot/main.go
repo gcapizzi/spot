@@ -17,14 +17,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", authURL)
+	fmt.Printf("Navigate to the following URL in your browser:\n\n%s\n\n", authURL)
 
 	client := <-clientChannel
+	fmt.Println("Authenticated successfully.")
 
 	playlistParser := playlist.NewParser(client)
 
 	err = playlistParser.CreatePlaylistFromText("spot", os.Stdin)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: %s.", err)
 	}
+
+	fmt.Println(`Playlist "spot" created.`)
 }
