@@ -5,28 +5,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/gcapizzi/spot/internal/command"
+	"github.com/gcapizzi/spot/internal/playlist"
 	"github.com/gcapizzi/spot/internal/spotify"
 )
 
 func main() {
-	client := authenticate()
-
-	userId, err := client.CurrentUserId()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Logged in as ", userId)
-
-	createPlaylistCommand := command.NewCreatePlaylistCommand(client)
-
-	err = createPlaylistCommand.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func authenticate() spotify.Client {
 	clientId := os.Getenv("SPOT_CLIENT_ID")
 	clientSecret := os.Getenv("SPOT_CLIENT_SECRET")
 
@@ -35,7 +18,13 @@ func authenticate() spotify.Client {
 		log.Fatal(err)
 	}
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", authUrl)
+
 	client := <-clientChannel
 
-	return client
+	playlistParser := playlist.NewParser(client)
+
+	err = playlistParser.CreatePlaylistFromText("spot", os.Stdin)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

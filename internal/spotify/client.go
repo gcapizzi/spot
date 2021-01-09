@@ -7,34 +7,12 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/gcapizzi/spot/internal/playlist"
 	"github.com/zmb3/spotify"
 )
 
-type Client interface {
-	CurrentUserId() (string, error)
-	FindTrack(string) (Track, error)
-	CreatePlaylist(string) (Playlist, error)
-	AddTrackToPlaylist(Playlist, Track) error
-}
-
-type Zmb3Client struct {
+type Client struct {
 	spotifyClient *spotify.Client
-}
-
-type Track struct {
-	Title     string
-	Artists   []string
-	Album     string
-	spotifyId string
-}
-
-func (client Zmb3Client) CurrentUserId() (string, error) {
-	currentUser, err := client.spotifyClient.CurrentUser()
-	if err != nil {
-		return "", err
-	}
-
-	return currentUser.ID, nil
 }
 
 func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
@@ -61,7 +39,7 @@ func Authenticate(clientId, clientSecret string) (string, chan Client, error) {
 		}
 
 		spotifyClient := auth.NewClient(token)
-		client := Zmb3Client{spotifyClient: &spotifyClient}
+		client := Client{spotifyClient: &spotifyClient}
 		clientChannel <- client
 		closeChannel <- true
 	})}
@@ -84,48 +62,42 @@ func generateRandomState() (string, error) {
 	return state, err
 }
 
-func (client Zmb3Client) FindTrack(query string) (Track, error) {
-	results, err := client.spotifyClient.Search(query, spotify.SearchTypeTrack)
+func (c Client) FindTrack(query string) (playlist.Track, error) {
+	results, err := c.spotifyClient.Search(query, spotify.SearchTypeTrack)
 	if err != nil {
-		return Track{}, err
+		return playlist.Track{}, err
 	}
 	if len(results.Tracks.Tracks) == 0 {
-		return Track{}, fmt.Errorf("No track found for query %s", query)
+		return playlist.Track{}, fmt.Errorf("No track found for query %s", query)
 	}
 
 	firstResult := results.Tracks.Tracks[0]
-	track := Track{
-		Title:     firstResult.Name,
-		Artists:   []string{firstResult.Artists[0].Name},
-		Album:     firstResult.Album.Name,
-		spotifyId: string(firstResult.ID),
-	}
-	return track, nil
+	return playlist.Track{
+		ID:      string(firstResult.ID),
+		Title:   firstResult.Name,
+		Artists: []string{firstResult.Artists[0].Name},
+		Album:   firstResult.Album.Name,
+	}, nil
 }
 
-type Playlist struct {
-	Name      string
-	spotifyId string
-}
-
-func (client Zmb3Client) CreatePlaylist(name string) (Playlist, error) {
-	userId, err := client.CurrentUserId()
+func (c Client) CreatePlaylist(name string) (playlist.Playlist, error) {
+	user, err := c.spotifyClient.CurrentUser()
 	if err != nil {
-		return Playlist{}, err
+		return playlist.Playlist{}, err
 	}
 
-	spotifyPlaylist, err := client.spotifyClient.CreatePlaylistForUser(userId, name, "", false)
+	spotifyPlaylist, err := c.spotifyClient.CreatePlaylistForUser(user.ID, name, "", false)
 	if err != nil {
-		return Playlist{}, err
+		return playlist.Playlist{}, err
 	}
 
-	return Playlist{Name: name, spotifyId: string(spotifyPlaylist.ID)}, nil
+	return playlist.Playlist{ID: string(spotifyPlaylist.ID), Name: name}, nil
 }
 
-func (client Zmb3Client) AddTrackToPlaylist(playlist Playlist, track Track) error {
-	_, err := client.spotifyClient.AddTracksToPlaylist(
-		spotify.ID(playlist.spotifyId),
-		spotify.ID(track.spotifyId),
+func (c Client) AddTrackToPlaylist(playlist playlist.Playlist, track playlist.Track) error {
+	_, err := c.spotifyClient.AddTracksToPlaylist(
+		spotify.ID(playlist.ID),
+		spotify.ID(track.ID),
 	)
 
 	return err
