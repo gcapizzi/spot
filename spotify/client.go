@@ -114,7 +114,7 @@ func (client Zmb3Client) CreatePlaylist(name string) (Playlist, error) {
 		return Playlist{}, err
 	}
 
-	spotifyPlaylist, err := client.spotifyClient.CreatePlaylistForUser(userId, name, false)
+	spotifyPlaylist, err := client.spotifyClient.CreatePlaylistForUser(userId, name, "", false)
 	if err != nil {
 		return Playlist{}, err
 	}
@@ -123,13 +123,7 @@ func (client Zmb3Client) CreatePlaylist(name string) (Playlist, error) {
 }
 
 func (client Zmb3Client) AddTrackToPlaylist(playlist Playlist, track Track) error {
-	userId, err := client.CurrentUserId()
-	if err != nil {
-		return err
-	}
-
-	_, err = client.spotifyClient.AddTracksToPlaylist(
-		userId,
+	_, err := client.spotifyClient.AddTracksToPlaylist(
 		spotify.ID(playlist.spotifyId),
 		spotify.ID(track.spotifyId),
 	)

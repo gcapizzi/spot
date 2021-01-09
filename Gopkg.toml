@@ -1,6 +1,0 @@
-[[constraint]]
-  name = "github.com/zmb3/spotify"
-
-[[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "~1.1.4"
