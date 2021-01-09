@@ -30,6 +30,18 @@ func TestParser(t *testing.T) {
 	}))
 }
 
+func TestParserWithEmptyText(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	client := NewFakeClient(map[string]playlist.Track{})
+
+	playlistParser := playlist.NewParser(client)
+	err := playlistParser.CreatePlaylistFromText("playlist", strings.NewReader("\n\n\n"))
+
+	g.Expect(err).To(MatchError(`no tracks found, playlist "playlist" not created`))
+	g.Expect(client.Playlists).To(BeEmpty())
+}
+
 func NewFakeClient(tracks map[string]playlist.Track) *FakeClient {
 	return &FakeClient{
 		tracks:    tracks,

@@ -2,6 +2,7 @@ package playlist
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 )
 
@@ -32,18 +33,28 @@ func NewParser(client Client) Parser {
 }
 
 func (p Parser) CreatePlaylistFromText(name string, reader io.Reader) error {
+	tracklistScanner := bufio.NewScanner(reader)
+
+	var tracks []Track
+	for tracklistScanner.Scan() {
+		trackQuery := tracklistScanner.Text()
+		track, err := p.client.FindTrack(trackQuery)
+		if err == nil {
+			tracks = append(tracks, track)
+		}
+	}
+
+	if len(tracks) == 0 {
+		return fmt.Errorf(`no tracks found, playlist "%s" not created`, name)
+	}
+
 	playlist, err := p.client.CreatePlaylist(name)
 	if err != nil {
 		return err
 	}
 
-	tracklistScanner := bufio.NewScanner(reader)
-	for tracklistScanner.Scan() {
-		trackQuery := tracklistScanner.Text()
-		track, err := p.client.FindTrack(trackQuery)
-		if err == nil {
-			p.client.AddTrackToPlaylist(playlist, track)
-		}
+	for _, track := range tracks {
+		p.client.AddTrackToPlaylist(playlist, track)
 	}
 
 	return nil
