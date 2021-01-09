@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/gcapizzi/spot/command"
-	"github.com/gcapizzi/spot/spotify"
+	"github.com/gcapizzi/spot/internal/command"
+	"github.com/gcapizzi/spot/internal/spotify"
 )
 
 func main() {

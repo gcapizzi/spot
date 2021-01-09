@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/gcapizzi/spot/spotify"
+	"github.com/gcapizzi/spot/internal/spotify"
 )
 
 type CreatePlaylistCommand struct {
