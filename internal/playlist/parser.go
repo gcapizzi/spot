@@ -54,7 +54,10 @@ func (p Parser) CreatePlaylistFromText(name string, reader io.Reader) error {
 	}
 
 	for _, track := range tracks {
-		p.client.AddTrackToPlaylist(playlist, track)
+		err = p.client.AddTrackToPlaylist(playlist, track)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
