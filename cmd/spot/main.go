@@ -13,8 +13,9 @@ func main() {
 	var client spotify.Client
 
 	var rootCmd = &cobra.Command{
-		Use:   "spot",
-		Short: "Spot is the Spotify swiss army knife.",
+		Use:          "spot",
+		Short:        "Spot is the Spotify swiss army knife.",
+		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			clientID := os.Getenv("SPOT_CLIENT_ID")
 			clientSecret := os.Getenv("SPOT_CLIENT_SECRET")
