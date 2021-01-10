@@ -31,6 +31,11 @@ func main() {
 
 			return nil
 		},
+	}
+
+	parseCmd := &cobra.Command{
+		Use:   "parse",
+		Short: "Create a playlist from a list of titles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			playlistParser := playlist.NewParser(client)
 
@@ -44,6 +49,7 @@ func main() {
 			return nil
 		},
 	}
+	rootCmd.AddCommand(parseCmd)
 
 	rootCmd.Execute()
 }
