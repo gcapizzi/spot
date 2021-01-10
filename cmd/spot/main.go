@@ -33,22 +33,24 @@ func main() {
 		},
 	}
 
+	var playlistName string
 	parseCmd := &cobra.Command{
 		Use:   "parse",
 		Short: "Create a playlist from a list of titles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			playlistParser := playlist.NewParser(client)
 
-			err := playlistParser.CreatePlaylistFromText("spot", os.Stdin)
+			err := playlistParser.CreatePlaylistFromText(playlistName, os.Stdin)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(`Playlist "spot" created.`)
+			fmt.Printf("Playlist \"%s\" created.\n", playlistName)
 
 			return nil
 		},
 	}
+	parseCmd.Flags().StringVarP(&playlistName, "name", "n", "spot", "the playlist name")
 	rootCmd.AddCommand(parseCmd)
 
 	rootCmd.Execute()
