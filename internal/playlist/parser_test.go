@@ -1,6 +1,7 @@
 package playlist_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -22,7 +23,7 @@ func TestParser(t *testing.T) {
 	}
 
 	playlistParser := playlist.NewParser(client)
-	playlistParser.CreatePlaylistFromText("playlist", strings.NewReader("one\ntwo\nthree"))
+	playlistParser.CreatePlaylistFromText(context.Background(), "playlist", strings.NewReader("one\ntwo\nthree"))
 
 	g.Expect(client.Playlists).To(HaveLen(1))
 	g.Expect(client.Playlists["playlist"]).To(Equal([]playlist.Track{
@@ -38,7 +39,7 @@ func TestParserWithEmptyText(t *testing.T) {
 	client := NewFakeClient()
 
 	playlistParser := playlist.NewParser(client)
-	err := playlistParser.CreatePlaylistFromText("playlist", strings.NewReader("\n\n\n"))
+	err := playlistParser.CreatePlaylistFromText(context.Background(), "playlist", strings.NewReader("\n\n\n"))
 
 	g.Expect(err).To(MatchError(`no tracks found, playlist "playlist" not created`))
 	g.Expect(client.Playlists).To(BeEmpty())
@@ -54,7 +55,7 @@ func TestParserFailingToCreatePlaylist(t *testing.T) {
 	client.CreatePlaylistErr = errors.New("create-playlist-error")
 
 	playlistParser := playlist.NewParser(client)
-	err := playlistParser.CreatePlaylistFromText("playlist", strings.NewReader("foo"))
+	err := playlistParser.CreatePlaylistFromText(context.Background(), "playlist", strings.NewReader("foo"))
 
 	g.Expect(err).To(MatchError("create-playlist-error"))
 }
@@ -69,7 +70,7 @@ func TestParserFailingToAddTrackToPlaylist(t *testing.T) {
 	client.AddTrackToPlaylistErr = errors.New("add-track-error")
 
 	playlistParser := playlist.NewParser(client)
-	err := playlistParser.CreatePlaylistFromText("playlist", strings.NewReader("foo"))
+	err := playlistParser.CreatePlaylistFromText(context.Background(), "playlist", strings.NewReader("foo"))
 
 	g.Expect(err).To(MatchError("add-track-error"))
 }
@@ -87,7 +88,7 @@ type FakeClient struct {
 	AddTrackToPlaylistErr error
 }
 
-func (c *FakeClient) FindTrack(query string) (playlist.Track, error) {
+func (c *FakeClient) FindTrack(ctx context.Context, query string) (playlist.Track, error) {
 	t, ok := c.Tracks[query]
 	if !ok {
 		return playlist.Track{}, fmt.Errorf("cannot find track '%s'", query)
@@ -96,7 +97,7 @@ func (c *FakeClient) FindTrack(query string) (playlist.Track, error) {
 	return t, nil
 }
 
-func (c *FakeClient) CreatePlaylist(name string) (playlist.Playlist, error) {
+func (c *FakeClient) CreatePlaylist(ctx context.Context, name string) (playlist.Playlist, error) {
 	if c.CreatePlaylistErr != nil {
 		return playlist.Playlist{}, c.CreatePlaylistErr
 	}
@@ -105,7 +106,7 @@ func (c *FakeClient) CreatePlaylist(name string) (playlist.Playlist, error) {
 	return playlist.Playlist{ID: name, Name: name}, nil
 }
 
-func (c *FakeClient) AddTrackToPlaylist(playlist playlist.Playlist, track playlist.Track) error {
+func (c *FakeClient) AddTrackToPlaylist(ctx context.Context, playlist playlist.Playlist, track playlist.Track) error {
 	if c.AddTrackToPlaylistErr != nil {
 		return c.AddTrackToPlaylistErr
 	}

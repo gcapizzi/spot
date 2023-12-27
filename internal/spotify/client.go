@@ -1,6 +1,7 @@
 package spotify
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"log"
@@ -8,38 +9,37 @@ import (
 	"net/http"
 
 	"github.com/gcapizzi/spot/internal/playlist"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
+	"github.com/zmb3/spotify/v2/auth"
 )
 
 type Client struct {
 	spotifyClient *spotify.Client
 }
 
-func Authenticate(clientID, clientSecret string) (string, chan Client, error) {
+func Authenticate(ctx context.Context, clientID, clientSecret string) (string, chan Client, error) {
 	state, err := generateRandomState()
 	if err != nil {
 		return "", nil, err
 	}
 
-	auth := spotify.NewAuthenticator(
-		"http://localhost:8080",
-		spotify.ScopeUserReadPrivate,
-		spotify.ScopePlaylistModifyPrivate,
-	)
-	auth.SetAuthInfo(clientID, clientSecret)
+	auth := spotifyauth.New(spotifyauth.WithRedirectURL("http://localhost:8080"), spotifyauth.WithScopes(
+		spotifyauth.ScopeUserReadPrivate,
+		spotifyauth.ScopePlaylistModifyPrivate,
+	), spotifyauth.WithClientID(clientID), spotifyauth.WithClientSecret(clientSecret))
 
 	clientChannel := make(chan Client)
 	closeChannel := make(chan bool)
 
 	server := http.Server{Addr: ":8080", Handler: http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		token, err := auth.Token(state, request)
+		token, err := auth.Token(ctx, state, request)
 		if err != nil {
 			http.Error(response, "Authentication failed", http.StatusForbidden)
 			log.Fatal(err)
 		}
 
-		spotifyClient := auth.NewClient(token)
-		client := Client{spotifyClient: &spotifyClient}
+		spotifyClient := spotify.New(auth.Client(ctx, token))
+		client := Client{spotifyClient: spotifyClient}
 		clientChannel <- client
 		closeChannel <- true
 	})}
@@ -62,8 +62,8 @@ func generateRandomState() (string, error) {
 	return state, err
 }
 
-func (c Client) FindTrack(query string) (playlist.Track, error) {
-	results, err := c.spotifyClient.Search(query, spotify.SearchTypeTrack)
+func (c Client) FindTrack(ctx context.Context, query string) (playlist.Track, error) {
+	results, err := c.spotifyClient.Search(ctx, query, spotify.SearchTypeTrack)
 	if err != nil {
 		return playlist.Track{}, err
 	}
@@ -80,13 +80,13 @@ func (c Client) FindTrack(query string) (playlist.Track, error) {
 	}, nil
 }
 
-func (c Client) CreatePlaylist(name string) (playlist.Playlist, error) {
-	user, err := c.spotifyClient.CurrentUser()
+func (c Client) CreatePlaylist(ctx context.Context, name string) (playlist.Playlist, error) {
+	user, err := c.spotifyClient.CurrentUser(ctx)
 	if err != nil {
 		return playlist.Playlist{}, err
 	}
 
-	spotifyPlaylist, err := c.spotifyClient.CreatePlaylistForUser(user.ID, name, "", false)
+	spotifyPlaylist, err := c.spotifyClient.CreatePlaylistForUser(ctx, user.ID, name, "", false, false)
 	if err != nil {
 		return playlist.Playlist{}, err
 	}
@@ -94,8 +94,9 @@ func (c Client) CreatePlaylist(name string) (playlist.Playlist, error) {
 	return playlist.Playlist{ID: string(spotifyPlaylist.ID), Name: name}, nil
 }
 
-func (c Client) AddTrackToPlaylist(playlist playlist.Playlist, track playlist.Track) error {
+func (c Client) AddTrackToPlaylist(ctx context.Context, playlist playlist.Playlist, track playlist.Track) error {
 	_, err := c.spotifyClient.AddTracksToPlaylist(
+		ctx,
 		spotify.ID(playlist.ID),
 		spotify.ID(track.ID),
 	)

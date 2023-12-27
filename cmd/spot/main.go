@@ -20,7 +20,7 @@ func main() {
 			clientID := os.Getenv("SPOT_CLIENT_ID")
 			clientSecret := os.Getenv("SPOT_CLIENT_SECRET")
 
-			authURL, clientChannel, err := spotify.Authenticate(clientID, clientSecret)
+			authURL, clientChannel, err := spotify.Authenticate(cmd.Context(), clientID, clientSecret)
 			if err != nil {
 				return err
 			}
@@ -40,7 +40,7 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			playlistParser := playlist.NewParser(client)
 
-			err := playlistParser.CreatePlaylistFromText(playlistName, os.Stdin)
+			err := playlistParser.CreatePlaylistFromText(cmd.Context(), playlistName, os.Stdin)
 			if err != nil {
 				return err
 			}

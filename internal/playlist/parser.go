@@ -2,14 +2,15 @@ package playlist
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 )
 
 type Client interface {
-	FindTrack(string) (Track, error)
-	CreatePlaylist(string) (Playlist, error)
-	AddTrackToPlaylist(Playlist, Track) error
+	FindTrack(context.Context, string) (Track, error)
+	CreatePlaylist(context.Context, string) (Playlist, error)
+	AddTrackToPlaylist(context.Context, Playlist, Track) error
 }
 
 type Playlist struct {
@@ -32,13 +33,13 @@ func NewParser(client Client) Parser {
 	return Parser{client: client}
 }
 
-func (p Parser) CreatePlaylistFromText(name string, reader io.Reader) error {
+func (p Parser) CreatePlaylistFromText(ctx context.Context, name string, reader io.Reader) error {
 	tracklistScanner := bufio.NewScanner(reader)
 
 	var tracks []Track
 	for tracklistScanner.Scan() {
 		trackQuery := tracklistScanner.Text()
-		track, err := p.client.FindTrack(trackQuery)
+		track, err := p.client.FindTrack(ctx, trackQuery)
 		if err == nil {
 			tracks = append(tracks, track)
 		}
@@ -48,13 +49,13 @@ func (p Parser) CreatePlaylistFromText(name string, reader io.Reader) error {
 		return fmt.Errorf(`no tracks found, playlist "%s" not created`, name)
 	}
 
-	playlist, err := p.client.CreatePlaylist(name)
+	playlist, err := p.client.CreatePlaylist(ctx, name)
 	if err != nil {
 		return err
 	}
 
 	for _, track := range tracks {
-		err = p.client.AddTrackToPlaylist(playlist, track)
+		err = p.client.AddTrackToPlaylist(ctx, playlist, track)
 		if err != nil {
 			return err
 		}
