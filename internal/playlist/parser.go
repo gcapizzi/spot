@@ -9,8 +9,9 @@ import (
 
 type Client interface {
 	FindTrack(context.Context, string) (Track, error)
+	FindAlbum(context.Context, string) (Album, error)
 	CreatePlaylist(context.Context, string) (Playlist, error)
-	AddTrackToPlaylist(context.Context, Playlist, Track) error
+	AddTracksToPlaylist(context.Context, Playlist, []Track) error
 }
 
 type Playlist struct {
@@ -25,6 +26,11 @@ type Track struct {
 	Album   string
 }
 
+type Album struct {
+	ID     string
+	Tracks []Track
+}
+
 type Parser struct {
 	client Client
 }
@@ -33,7 +39,7 @@ func NewParser(client Client) Parser {
 	return Parser{client: client}
 }
 
-func (p Parser) CreatePlaylistFromText(ctx context.Context, name string, reader io.Reader) error {
+func (p Parser) CreatePlaylistFromTrackList(ctx context.Context, name string, reader io.Reader) error {
 	tracklistScanner := bufio.NewScanner(reader)
 
 	var tracks []Track
@@ -54,8 +60,32 @@ func (p Parser) CreatePlaylistFromText(ctx context.Context, name string, reader 
 		return err
 	}
 
-	for _, track := range tracks {
-		err = p.client.AddTrackToPlaylist(ctx, playlist, track)
+	return p.client.AddTracksToPlaylist(ctx, playlist, tracks)
+}
+
+func (p Parser) CreatePlaylistFromAlbumList(ctx context.Context, name string, reader io.Reader) error {
+	albumlistScanner := bufio.NewScanner(reader)
+
+	var albums []Album
+	for albumlistScanner.Scan() {
+		albumQuery := albumlistScanner.Text()
+		album, err := p.client.FindAlbum(ctx, albumQuery)
+		if err == nil {
+			albums = append(albums, album)
+		}
+	}
+
+	if len(albums) == 0 {
+		return fmt.Errorf(`no albums found, playlist "%s" not created`, name)
+	}
+
+	playlist, err := p.client.CreatePlaylist(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	for _, album := range albums {
+		err := p.client.AddTracksToPlaylist(ctx, playlist, album.Tracks)
 		if err != nil {
 			return err
 		}

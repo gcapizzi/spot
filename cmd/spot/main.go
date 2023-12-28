@@ -34,13 +34,13 @@ func main() {
 	}
 
 	var playlistName string
-	parseCmd := &cobra.Command{
-		Use:   "parse",
-		Short: "Create a playlist from a list of titles",
+	parseTracksCmd := &cobra.Command{
+		Use:   "parse-tracks",
+		Short: "Create a playlist from a list of track titles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			playlistParser := playlist.NewParser(client)
 
-			err := playlistParser.CreatePlaylistFromText(cmd.Context(), playlistName, os.Stdin)
+			err := playlistParser.CreatePlaylistFromTrackList(cmd.Context(), playlistName, os.Stdin)
 			if err != nil {
 				return err
 			}
@@ -50,8 +50,27 @@ func main() {
 			return nil
 		},
 	}
-	parseCmd.Flags().StringVarP(&playlistName, "name", "n", "spot", "the playlist name")
-	rootCmd.AddCommand(parseCmd)
+	parseTracksCmd.Flags().StringVarP(&playlistName, "name", "n", "spot", "the playlist name")
+	rootCmd.AddCommand(parseTracksCmd)
+
+	parseAlbumsCmd := &cobra.Command{
+		Use:   "parse-albums",
+		Short: "Create a playlist from a list of album titles",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			playlistParser := playlist.NewParser(client)
+
+			err := playlistParser.CreatePlaylistFromAlbumList(cmd.Context(), playlistName, os.Stdin)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Playlist \"%s\" created.\n", playlistName)
+
+			return nil
+		},
+	}
+	parseAlbumsCmd.Flags().StringVarP(&playlistName, "name", "n", "spot", "the playlist name")
+	rootCmd.AddCommand(parseAlbumsCmd)
 
 	rootCmd.Execute()
 }

@@ -30,6 +30,34 @@ func (c Client) FindTrack(ctx context.Context, query string) (playlist.Track, er
 	}, nil
 }
 
+func (c Client) FindAlbum(ctx context.Context, query string) (playlist.Album, error) {
+	results, err := c.spotifyClient.Search(ctx, query, spotify.SearchTypeAlbum)
+	if err != nil {
+		return playlist.Album{}, err
+	}
+	if len(results.Albums.Albums) == 0 {
+		return playlist.Album{}, fmt.Errorf("no album found for query %s", query)
+	}
+
+	firstResult := results.Albums.Albums[0]
+	album, err := c.spotifyClient.GetAlbum(ctx, firstResult.ID)
+
+	var tracks []playlist.Track
+	for _, t := range album.Tracks.Tracks {
+		tracks = append(tracks, playlist.Track{
+			ID:      string(t.ID),
+			Title:   t.Name,
+			Artists: []string{t.Artists[0].Name},
+			Album:   t.Album.Name,
+		})
+	}
+
+	return playlist.Album{
+		ID:     string(firstResult.ID),
+		Tracks: tracks,
+	}, nil
+}
+
 func (c Client) CreatePlaylist(ctx context.Context, name string) (playlist.Playlist, error) {
 	user, err := c.spotifyClient.CurrentUser(ctx)
 	if err != nil {
@@ -44,11 +72,16 @@ func (c Client) CreatePlaylist(ctx context.Context, name string) (playlist.Playl
 	return playlist.Playlist{ID: string(spotifyPlaylist.ID), Name: name}, nil
 }
 
-func (c Client) AddTrackToPlaylist(ctx context.Context, playlist playlist.Playlist, track playlist.Track) error {
+func (c Client) AddTracksToPlaylist(ctx context.Context, playlist playlist.Playlist, tracks []playlist.Track) error {
+	var trackIDs []spotify.ID
+	for _, track := range tracks {
+		trackIDs = append(trackIDs, spotify.ID(track.ID))
+	}
+
 	_, err := c.spotifyClient.AddTracksToPlaylist(
 		ctx,
 		spotify.ID(playlist.ID),
-		spotify.ID(track.ID),
+		trackIDs...,
 	)
 
 	return err
