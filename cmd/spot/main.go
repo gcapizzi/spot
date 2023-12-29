@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gcapizzi/spot/internal/playlist"
+	"github.com/gcapizzi/spot/internal/commands"
 	"github.com/gcapizzi/spot/internal/spotify"
 	"github.com/spf13/cobra"
 )
@@ -38,9 +38,9 @@ func main() {
 		Use:   "parse-tracks",
 		Short: "Create a playlist from a list of track titles",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			playlistParser := playlist.NewParser(client)
+			parseTracksCmd := commands.NewParseTracks(client)
 
-			err := playlistParser.CreatePlaylistFromTrackList(cmd.Context(), playlistName, os.Stdin)
+			err := parseTracksCmd.Run(cmd.Context(), playlistName, os.Stdin)
 			if err != nil {
 				return err
 			}
@@ -57,9 +57,9 @@ func main() {
 		Use:   "parse-albums",
 		Short: "Create a playlist from a list of album titles",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			playlistParser := playlist.NewParser(client)
+			parseAlbumsCmd := commands.NewParseAlbums(client)
 
-			err := playlistParser.CreatePlaylistFromAlbumList(cmd.Context(), playlistName, os.Stdin)
+			err := parseAlbumsCmd.Run(cmd.Context(), playlistName, os.Stdin)
 			if err != nil {
 				return err
 			}
