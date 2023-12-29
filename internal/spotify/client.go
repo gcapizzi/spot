@@ -22,10 +22,16 @@ func (c Client) FindTrack(ctx context.Context, query string) (playlist.Track, er
 	}
 
 	firstResult := results.Tracks.Tracks[0]
+
+	var artists []string
+	for _, artist := range firstResult.Artists {
+		artists = append(artists, artist.Name)
+	}
+
 	return playlist.Track{
 		ID:      string(firstResult.ID),
 		Title:   firstResult.Name,
-		Artists: []string{firstResult.Artists[0].Name},
+		Artists: artists,
 		Album:   firstResult.Album.Name,
 	}, nil
 }
