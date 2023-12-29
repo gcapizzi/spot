@@ -27,8 +27,10 @@ type Track struct {
 }
 
 type Album struct {
-	ID     string
-	Tracks []Track
+	ID      string
+	Title   string
+	Artists []string
+	Tracks  []Track
 }
 
 type Parser struct {

@@ -48,6 +48,11 @@ func (c Client) FindAlbum(ctx context.Context, query string) (playlist.Album, er
 	firstResult := results.Albums.Albums[0]
 	album, err := c.spotifyClient.GetAlbum(ctx, firstResult.ID)
 
+	var artists []string
+	for _, artist := range album.Artists {
+		artists = append(artists, artist.Name)
+	}
+
 	var tracks []playlist.Track
 	for _, t := range album.Tracks.Tracks {
 		tracks = append(tracks, playlist.Track{
@@ -59,8 +64,10 @@ func (c Client) FindAlbum(ctx context.Context, query string) (playlist.Album, er
 	}
 
 	return playlist.Album{
-		ID:     string(firstResult.ID),
-		Tracks: tracks,
+		ID:      string(firstResult.ID),
+		Title:   album.Name,
+		Artists: artists,
+		Tracks:  tracks,
 	}, nil
 }
 
