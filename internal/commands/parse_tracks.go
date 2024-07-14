@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	spot "github.com/gcapizzi/spot/internal"
 )
@@ -25,7 +26,10 @@ func (c ParseTracks) Run(ctx context.Context, name string, reader io.Reader) err
 		trackQuery := tracklistScanner.Text()
 		track, err := c.client.FindTrack(ctx, trackQuery)
 		if err == nil {
+			fmt.Printf("✅ %q -> %s - %s\n", trackQuery, strings.Join(track.Artists, ", "), track.Title)
 			tracks = append(tracks, track)
+		} else {
+			fmt.Printf("❌ %q\n", trackQuery)
 		}
 	}
 

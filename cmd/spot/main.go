@@ -24,10 +24,10 @@ func main() {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Navigate to the following URL in your browser:\n\n%s\n\n", authURL)
+			fmt.Printf("👉 %s\n", authURL)
 
 			client = <-clientChannel
-			fmt.Println("Authenticated successfully.")
+			fmt.Println("✅ Authenticated successfully.")
 
 			return nil
 		},

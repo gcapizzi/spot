@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	spot "github.com/gcapizzi/spot/internal"
 )
@@ -25,7 +26,10 @@ func (c ParseAlbums) Run(ctx context.Context, name string, reader io.Reader) err
 		albumQuery := albumlistScanner.Text()
 		album, err := c.client.FindAlbum(ctx, albumQuery)
 		if err == nil {
+			fmt.Printf("✅ %q -> %s - %s\n", albumQuery, strings.Join(album.Artists, ", "), album.Title)
 			albums = append(albums, album)
+		} else {
+			fmt.Printf("❌ %q\n", albumQuery)
 		}
 	}
 
