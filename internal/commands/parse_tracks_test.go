@@ -57,7 +57,7 @@ func TestParseTracks(t *testing.T) {
 		g.Expect(err).To(MatchError("create-playlist-error"))
 	})
 
-	t.Run("when creating the playlist fails", func(t *testing.T) {
+	t.Run("when adding a track fails", func(t *testing.T) {
 		client := NewFakeClient()
 		client.Tracks = map[string]spot.Track{
 			"foo": {ID: "bar"},
