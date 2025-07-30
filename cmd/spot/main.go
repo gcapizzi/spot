@@ -72,5 +72,23 @@ func main() {
 	parseAlbumsCmd.Flags().StringVarP(&playlistName, "name", "n", "spot", "the playlist name")
 	rootCmd.AddCommand(parseAlbumsCmd)
 
+	exportAlbumsCmd := &cobra.Command{
+		Use:   "export-albums",
+		Short: "Export all the user albums as HTML bookmarks",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			exportAlbumsCmd := commands.NewExportAlbums(client)
+
+			err := exportAlbumsCmd.Run(cmd.Context(), os.Stdout)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Albums exported")
+
+			return nil
+		},
+	}
+	rootCmd.AddCommand(exportAlbumsCmd)
+
 	rootCmd.Execute()
 }

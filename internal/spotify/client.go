@@ -99,3 +99,7 @@ func (c Client) AddTracksToPlaylist(ctx context.Context, playlist spot.Playlist,
 
 	return err
 }
+
+func (c Client) SavedAlbums(ctx context.Context) ([]spot.Album, error) {
+	return nil, nil
+}

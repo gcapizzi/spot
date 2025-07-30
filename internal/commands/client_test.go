@@ -3,6 +3,8 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	"maps"
+	"slices"
 
 	spot "github.com/gcapizzi/spot/internal"
 )
@@ -55,4 +57,8 @@ func (c *FakeClient) AddTracksToPlaylist(ctx context.Context, playlist spot.Play
 
 	c.Playlists[playlist.ID] = append(c.Playlists[playlist.ID], tracks...)
 	return nil
+}
+
+func (c *FakeClient) SavedAlbums(ctx context.Context) ([]spot.Album, error) {
+	return slices.Collect(maps.Values(c.Albums)), nil
 }

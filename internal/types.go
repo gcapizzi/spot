@@ -17,4 +17,5 @@ type Album struct {
 	Title   string
 	Artists []string
 	Tracks  []Track
+	URL     string
 }
