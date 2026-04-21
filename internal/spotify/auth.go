@@ -16,7 +16,7 @@ func Authenticate(ctx context.Context, clientID, clientSecret string) (string, c
 		return "", nil, err
 	}
 
-	auth := spotifyauth.New(spotifyauth.WithRedirectURL("http://localhost:8080"), spotifyauth.WithScopes(
+	auth := spotifyauth.New(spotifyauth.WithRedirectURL("http://127.0.0.1:8080"), spotifyauth.WithScopes(
 		spotifyauth.ScopeUserReadPrivate,
 		spotifyauth.ScopePlaylistModifyPrivate,
 	), spotifyauth.WithClientID(clientID), spotifyauth.WithClientSecret(clientSecret))
